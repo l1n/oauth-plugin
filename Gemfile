@@ -25,3 +25,5 @@ platforms :jruby do
     gem 'libnotify',  '~> 0.1.3'
   end
 end
+
+gem 'pry'
