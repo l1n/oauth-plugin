@@ -50,6 +50,9 @@ module OAuth
             end
           end
 
+          # explicitly set the env variable
+          env["oauth.token"] = oauth_token
+
           # return the token secret and the consumer secret
           [(oauth_token.nil? ? nil : oauth_token.secret), (client_application.nil? ? nil : client_application.secret)]
         end # end of block
