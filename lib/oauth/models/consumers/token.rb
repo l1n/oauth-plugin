@@ -51,11 +51,11 @@ module Oauth
             if access_token.class.ancestors.include?(Oauth2Token)
               token = access_token
             else
-              if user
-                token = self.find_or_initialize_by_user_id_and_token(user.id, access_token.token)
-              else
-                token = self.find_or_initialize_by_token(access_token.token)
-              end
+							if user
+								token = self.find_or_initialize_by(user_id: user.id, token: access_token.token)
+							else
+								token = self.find_or_initialize_by(token: access_token.token)
+							end
             end
 
             token = if new_token then set_details(new_token, access_token) else set_details(access_token, token) end
