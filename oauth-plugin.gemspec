@@ -25,7 +25,7 @@ Gem::Specification.new do |s|
   s.rubygems_version = %q{1.3.7}
   s.summary = %q{Ruby on Rails Plugin for OAuth Provider and Consumer}
   s.add_development_dependency "opentransact"
-  s.add_development_dependency "rspec", "~> 2.4.0"
+  s.add_development_dependency "rspec", "~> 3.8.0"
   s.add_development_dependency "fakeweb"
   s.add_development_dependency "fuubar"
   s.add_development_dependency "guard-rspec"
