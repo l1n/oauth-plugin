@@ -18,10 +18,6 @@ Gem::Specification.new do |s|
   s.rubygems_version = "1.8.25"
   s.summary = "Ruby on Rails Plugin for OAuth Provider and Consumer"
 
-  s.add_dependency "multi_json"
-  s.add_dependency("oauth", ">= 0.4.4", "< 0.6.0")
-  s.add_dependency("rack")
-  s.add_dependency("oauth2", '>= 0.5.0')
   if s.respond_to? :specification_version then
     s.specification_version = 3
 
@@ -34,7 +30,7 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<growl>, [">= 0"])
       s.add_development_dependency(%q<rack-test>, [">= 0"])
       s.add_runtime_dependency(%q<multi_json>, [">= 0"])
-      s.add_runtime_dependency(%q<oauth>, ["~> 0.4.4"])
+      s.add_runtime_dependency(%q<oauth>, [">= 0.5.0"])
       s.add_runtime_dependency(%q<rack>, [">= 0"])
       s.add_runtime_dependency(%q<oauth2>, [">= 0.5.0"])
     else
@@ -59,7 +55,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<growl>, [">= 0"])
     s.add_dependency(%q<rack-test>, [">= 0"])
     s.add_dependency(%q<multi_json>, [">= 0"])
-    s.add_dependency(%q<oauth>, ["~> 0.4.4"])
+    s.add_dependency(%q<oauth>, [">= 0.5.0"])
     s.add_dependency(%q<rack>, [">= 0"])
     s.add_dependency(%q<oauth2>, [">= 0.5.0"])
   end
