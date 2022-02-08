@@ -18,6 +18,10 @@ Gem::Specification.new do |s|
   s.rubygems_version = "1.8.25"
   s.summary = "Ruby on Rails Plugin for OAuth Provider and Consumer"
 
+  s.add_dependency "multi_json"
+  s.add_dependency("oauth", ">= 0.4.4", "< 0.6.0")
+  s.add_dependency("rack")
+  s.add_dependency("oauth2", '>= 0.5.0')
   if s.respond_to? :specification_version then
     s.specification_version = 3
 
