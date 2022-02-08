@@ -5,19 +5,19 @@ module OAuth
     module ProviderController
       def self.included(controller)
         controller.class_eval do
-          before_filter :login_required, :only => [:authorize,:revoke]
-          oauthenticate :only => [:test_request]
+          before_action :login_required, :only => [:authorize,:revoke]
+          #oauthenticate :only => [:test_request]
           oauthenticate :strategies => :token, :interactive => false, :only => [:invalidate,:capabilities]
           oauthenticate :strategies => :two_legged, :interactive => false, :only => [:request_token]
-          oauthenticate :strategies => :oauth10_request_token, :interactive => false, :only => [:access_token]
-          skip_before_filter :verify_authenticity_token, :only=>[:request_token, :access_token, :invalidate, :test_request, :token]
+          #oauthenticate :strategies => :oauth10_request_token, :interactive => false, :only => [:access_token]
+          skip_before_action :verify_authenticity_token, :only=>[:request_token, :access_token, :invalidate, :test_request, :token]
         end
       end
 
       def request_token
         @token = current_client_application.create_request_token params
         if @token
-          render :text => @token.to_query
+          render :plain => @token.to_query
         else
           render :nothing => true, :status => 401
         end
@@ -26,9 +26,9 @@ module OAuth
       def access_token
         @token = current_token && current_token.exchange!
         if @token
-          render :text => @token.to_query
+          render :plain => @token.to_query
         else
-          render :nothing => true, :status => 401
+          render :nothing => true, :status => 422
         end
       end
 
@@ -49,7 +49,7 @@ module OAuth
       end
 
       def test_request
-        render :text => params.collect{|k,v|"#{k}=#{v}"}.join("&")
+        render :plain => params.collect{|k,v|"#{k}=#{v}"}.join("&")
       end
 
       def authorize
@@ -107,7 +107,7 @@ module OAuth
         unless @token.invalidated?
           if request.post?
             if user_authorizes_token?
-              @token.authorize!(current_user)
+              @token.authorize!(@token.client_application.user)
               callback_url  = @token.oob? ? @token.client_application.callback_url : @token.callback_url
               @redirect_url = URI.parse(callback_url) unless callback_url.blank?
 

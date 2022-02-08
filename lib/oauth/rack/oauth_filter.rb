@@ -23,6 +23,7 @@ module OAuth
         request = ::Rack::Request.new(env)
         env["oauth_plugin"] = true
         strategies = []
+
         if token_string = oauth2_token(request)
           if token = Oauth2Token.where('invalidated_at IS NULL and authorized_at IS NOT NULL and token = ?', token_string).first
             env["oauth.token"]   = token
@@ -32,30 +33,38 @@ module OAuth
           end
 
         elsif oauth1_verify(request) do |request_proxy|
-          client_application = ClientApplication.find_by_key(request_proxy.consumer_key)
-          env["oauth.client_application_candidate"] = client_application
+              client_application = ClientApplication.find_by_key(request_proxy.consumer_key)
+              env["oauth.client_application_candidate"] = client_application
 
-          oauth_token = nil
+              oauth_token = nil
 
-          if client_application
-            # Store this temporarily in client_application object for use in request token generation
-            client_application.token_callback_url = request_proxy.oauth_callback if request_proxy.oauth_callback
+              if client_application
+                # Store this temporarily in client_application object for use in request token generation
+                client_application.token_callback_url = request_proxy.oauth_callback if request_proxy.oauth_callback
 
-            if request_proxy.token
-              oauth_token = client_application.tokens.where('invalidated_at IS NULL AND authorized_at IS NOT NULL and token = ?', request_proxy.token).first
-              if oauth_token.respond_to?(:provided_oauth_verifier=)
-                oauth_token.provided_oauth_verifier = request_proxy.oauth_verifier
+                if request_proxy.token
+                  oauth_token = client_application.tokens.where('invalidated_at IS NULL AND authorized_at IS NOT NULL and token = ?', request_proxy.token).first
+
+                  if oauth_token.respond_to?(:provided_oauth_verifier=)
+                    oauth_token.provided_oauth_verifier = request_proxy.oauth_verifier
+                  end
+                  env["oauth.token_candidate"] = oauth_token
+                end
               end
-              env["oauth.token_candidate"] = oauth_token
-            end
-          end
 
-          # return the token secret and the consumer secret
-          [(oauth_token.nil? ? nil : oauth_token.secret), (client_application.nil? ? nil : client_application.secret)]
-        end
+              # explicitly set the token
+              env["oauth.token"] = oauth_token
+
+              # return the token secret and the consumer secret
+              [(oauth_token.nil? ? nil : oauth_token.secret), (client_application.nil? ? nil : client_application.secret)]
+            end
+
+
           if env["oauth.token_candidate"]
             env["oauth.token"] = env["oauth.token_candidate"]
+
             strategies << :oauth10_token
+
             if env["oauth.token"].is_a?(::RequestToken)
               strategies << :oauth10_request_token
             elsif env["oauth.token"].is_a?(::AccessToken)
@@ -67,8 +76,8 @@ module OAuth
           end
           env["oauth.client_application"] = env["oauth.client_application_candidate"]
           env["oauth.version"] = 1
-
         end
+
         env["oauth.strategies"] = strategies unless strategies.empty?
         env["oauth.client_application_candidate"] = nil
         env["oauth.token_candidate"] = nil
@@ -77,10 +86,13 @@ module OAuth
 
       def oauth1_verify(request, options = {}, &block)
         begin
+          # becomes OAuth::Signature::HMAC::SHA512 instance, which verifies by comparing self == self.request.signature
           signature = OAuth::Signature.build(request, options, &block)
-          return false unless OauthNonce.remember(signature.request.nonce, signature.request.timestamp)
-          value = signature.verify
-          value
+
+          debug = "signature: #{signature.signature}, signature: #{signature.request.signature}, verification: #{signature.verify}, base_string: #{signature.signature_base_string}"
+          log_to_hiphat(debug, request)
+
+          signature.verify
         rescue OAuth::Signature::UnknownSignatureMethod => e
           false
         end
@@ -91,6 +103,19 @@ module OAuth
             request.env["HTTP_AUTHORIZATION"] &&
                 !request.env["HTTP_AUTHORIZATION"][/(oauth_version="1.0")/] &&
                 request.env["HTTP_AUTHORIZATION"][/^(Bearer|OAuth|Token) (token=)?([^\s]*)$/, 3]
+      end
+
+      def log_to_hiphat(msg, request)
+        begin
+          if request.url =~ /delltest/
+            HipChatBot.client['322012'].send('RIOBOT', msg,
+              :color => 'purple',
+              :message_format => 'text'
+            )
+          end
+        rescue
+          # do nothing
+        end
       end
     end
   end
